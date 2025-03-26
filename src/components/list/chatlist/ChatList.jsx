@@ -15,62 +15,62 @@ const ChatList = () => {
           />
         </div>
         <div className="item">
-          <img src="./pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt =""/>
+          <img src="./avatar.png" alt =""/>
           <div className="texts">
             <span>UserName</span>
             <p>Message</p>
           </div>
         </div>
         <div className="item">
-          <img src="./pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt =""/>
+          <img src="./avatar.png" alt =""/>
           <div className="texts">
             <span>UserName</span>
             <p>Message</p>
           </div>
         </div>
         <div className="item">
-          <img src="./pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt =""/>
+          <img src="./avatar.png" alt =""/>
           <div className="texts">
             <span>UserName</span>
             <p>Message</p>
           </div>
         </div>
         <div className="item">
-          <img src="./pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt =""/>
+          <img src="./avatar.png" alt =""/>
           <div className="texts">
             <span>UserName</span>
             <p>Message</p>
           </div>
         </div>
         <div className="item">
-          <img src="./pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt =""/>
+          <img src="./avatar.png" alt =""/>
           <div className="texts">
             <span>UserName</span>
             <p>Message</p>
           </div>
         </div>
         <div className="item">
-          <img src="./pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt =""/>
+          <img src="./avatar.png" alt =""/>
           <div className="texts">
             <span>UserName</span>
             <p>Message</p>
           </div>
         </div>
         <div className="item">
-          <img src="./pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt =""/>
+          <img src="./avatar.png" alt =""/>
           <div className="texts">
             <span>UserName</span>
             <p>Message</p>
           </div>
         </div>
         <div className="item">
-          <img src="./pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt =""/>
+          <img src="./avatar.png" alt =""/>
           <div className="texts">
             <span>UserName</span>
             <p>Message</p>
           </div>
         </div>
-        
+
       </div>
     )
   }
