@@ -20,7 +20,7 @@
 
 
     .info{
-        padding: 15px;
+        padding: 5px;
         display: flex;
         flex-direction: column;
         gap: 15px;
@@ -46,7 +46,7 @@
             .photos{
                 display: flex;
                 flex-direction: column;
-                gap:10px;
+                gap: 5px;
                 margin-top: 10px;
 
                 .photoItem{
@@ -92,10 +92,20 @@
     button{
         width: 100%;
         padding: 10px 20px;
-        background-color: red;
+        background-color: rgba(255, 0, 0, 0.567);
         color: white;
         border: none;
         border-radius: 5px;
         cursor: pointer;
+
+        &:hover{
+            background-color: rgba(255, 0, 0, 0.581);
+        }
+
+        &.logout{
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.567);
+        }
     }
 }
