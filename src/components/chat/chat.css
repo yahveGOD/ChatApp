@@ -74,7 +74,7 @@
 
                 .texts{
                     p{
-                        background-color: rgba(217, 17, 17, 0.527);
+                        background-color:  rgba(237, 197, 163, 0.877);
                         
                     }
                 }
@@ -132,7 +132,7 @@
         }
         input{
             flex:1;
-            background-color: rgba(233, 26, 26, 0.301);
+            background-color:  rgba(237, 197, 163, 0.877);
             border: none;
             outline: none;
             color:white;
@@ -154,7 +154,7 @@
         
 
         .sendButton{
-            background-color: rgba(233, 26, 26, 0.301);
+            background-color:  rgba(237, 197, 163, 0.877);
             color:white;
             padding: 10px 20px;
             border: none;
