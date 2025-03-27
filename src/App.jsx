@@ -1,13 +1,25 @@
 import Detail from "./components/detail/Detail"
-import List from "./components/list/list"
+import List from "./components/list/List"
 import Chat from "./components/chat/Chat"
+import Login from "./components/login/login"
+import Notification from "./components/notification/Notification"
 
 const App = () => {
+
+  const user = true
+
   return (
     <div className='container'>
-      <List/>
-      <Chat/>
-      <Detail/>
+      {
+        user ? (   
+          <>  
+            <List/>
+            <Chat/>
+            <Detail/>
+          </> 
+        ) : (<Login/>)
+      }
+      <Notification/>
     </div>
   )
 }
