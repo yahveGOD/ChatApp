@@ -1,13 +1,18 @@
 import { useState } from "react";
 import "./login.css";
 import { toast } from "react-toastify";
-import { account } from "../../lib/AppWriteConfig"
+import { account, databases, storage } from "../../lib/AppWriteConfig";
+import { ID } from "appwrite";
+
 
 const Login = () => {
     const[avatar,setAvatar] = useState({
         file:null,
         url:""
     });
+
+
+    const [loading,setLoading] = useState (false)
 
     const handleAvatar = e => {
         if(e.target.files[0]){
@@ -20,23 +25,73 @@ const Login = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
+        setLoading(true)
         const formData = new FormData(e.target);
 
         const {username,email,password} = Object.fromEntries(formData);
 
         try{
-            const res = await account.create("unique()", email, password, username)
+            const res = await account.create(ID.unique(), email, password, username)
+
+            let imgUrl = ""
+            if (avatar.file) {
+                const fileRes = await storage.createFile("67e559a500265e7f88f1", ID.unique(), avatar.file);
+                imgUrl = storage.getFilePreview("67e559a500265e7f88f1", fileRes.$id);
+            }
+
+            await databases.createDocument(
+                "67e55994002fd6e76a8f", 
+                "users", 
+                res.$id, 
+                {
+                    username,
+                    email,
+                    avatar: imgUrl,
+                    id: res.$id,
+                    blocked: [],
+                }
+            )
+
+            await databases.createDocument(
+                "67e55994002fd6e76a8f", 
+                "user_chats", 
+                res.$id, 
+                {
+                    chats: [],
+                }
+            )
+        
+        toast.success("Success!")
 
         }catch(err){
 
             console.log(err)
             toast.error(err.message)
         }
+        finally{
+            setLoading(false)
+        }
         
     }
 
-    const handleLogin = e => {
+    const handleLogin = async(e) => {
         e.preventDefault()
+        setLoading(true)
+
+        const formData = new FormData(e.target);
+
+        const {email,password} = Object.fromEntries(formData);
+
+        try{
+           return await account.createEmailPasswordSession(email,password);
+        }
+        catch(err){
+            console.log(err)
+            toast.error(err.message)
+        }
+        finally{
+            setLoading(false)
+        }
     }
 
     return (
@@ -46,7 +101,7 @@ const Login = () => {
             <form onSubmit={handleLogin}>
                 <input type="text" placeholder="Email" name = "email"/>
                 <input type="password" placeholder="Password" name = "password"/>
-                <button>Sign In</button>
+                <button disabled={loading}>{loading ? "Loading" : "Sign In"}</button>
             </form>
         </div>
         <div className="separator"></div>
@@ -61,9 +116,9 @@ const Login = () => {
                 <input type="text" placeholder="Username" name = "username"/>
                 <input type="text" placeholder="Email" name = "email"/>
                 <input type="password" placeholder="Password" name = "password"/>
-                <button>Sign Up</button>
+                <button disabled={loading}>{loading ? "Loading" : "Sign Up"}</button>
             </form>
-        </div>
+         </div>
 
       </div>
     )
