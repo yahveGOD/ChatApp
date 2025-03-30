@@ -1,7 +1,22 @@
+import { toast } from "react-toastify";
+import { account } from "../../lib/AppWriteConfig"
+import { useUserStore } from "../../lib/UserStore";
 import "./detail.css"
 
 
 const Detail = () => {
+
+  const { logout } = useUserStore(); 
+
+  const handleLogout = async () => {
+    try {
+        await logout();
+        toast.success("Logout...")
+    } catch (err) {
+        console.log("Logout error:", err);
+    }
+};
+
     return (
       <div className='detail'>
         <div className="user">
@@ -59,8 +74,8 @@ const Detail = () => {
           </div>
         </div>
         <button>Block User</button>
-        <button className="logout">Logout</button>
-      </div>
+        <button className="logout" onClick={() => handleLogout()}>Logout</button>
+        </div>
     )
   }
   

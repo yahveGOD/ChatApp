@@ -1,52 +1,50 @@
-import Detail from "./components/detail/Detail"
-import List from "./components/list/List"
-import Chat from "./components/chat/Chat"
-import Login from "./components/login/login"
-import Notification from "./components/notification/Notification"
 import { useEffect } from "react";
 import { account } from "./lib/AppWriteConfig";
-import {useUserStore} from "./lib/UserStore"
+import { useUserStore } from "./lib/UserStore";
+import Detail from "./components/detail/Detail";
+import List from "./components/list/List";
+import Chat from "./components/chat/Chat";
+import Login from "./components/login/login";
+import Notification from "./components/notification/Notification";
 
 const App = () => {
-
-
-  const {currentUser,isLoading, fetchUserInfo} = useUserStore();
-
+  const { currentUser, isLoading, fetchUserInfo } = useUserStore();
 
   useEffect(() => {
-    let isMounted = true;
-
     const checkAuth = async () => {
-            
-            const userData = await account.get();
-            fetchUserInfo(userData.$id)
+      try {
+        const session = await account.getSession("current"); // Явно получаем сессию
+        if (session) {
+          const userData = await account.get();
+          fetchUserInfo(userData.$id);
+        } else {
+          fetchUserInfo(null);
+        }
+      } catch (err) {
+        console.error("User is not authenticated:", err);
+        fetchUserInfo(null);
+      }
     };
 
     checkAuth();
+  }, [fetchUserInfo]); // Добавляем зависимость
 
-    return () => {
-        isMounted = false;
-    };
-}, [fetchUserInfo]);
-
-  console.log(currentUser)
-
-  if(isLoading) return <div className="loading">Loading...</div>
+  if (isLoading) return <div className="loading">Loading...</div>;
 
   return (
-    <div className='container'>
-      {
-        currentUser ? (   
-          <>  
-            <List/>
-            <Chat/>
-            <Detail/>
-          </> 
-        ) : (<Login/>)
-      }
-      <Notification/>
+    <div className="container">
+      {currentUser ? (
+        <>
+          <List />
+          <Chat />
+          <Detail />
+        </>
+      ) : (
+        <Login />
+      )}
+      <Notification />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;

@@ -3,14 +3,15 @@ import "./login.css";
 import { toast } from "react-toastify";
 import { account, databases, storage } from "../../lib/AppWriteConfig";
 import { ID } from "appwrite";
-
+import {useUserStore} from "../../lib/UserStore"
 
 const Login = () => {
     const[avatar,setAvatar] = useState({
         file:null,
         url:""
     });
-
+      const {fetchUserInfo} = useUserStore();
+    
 
     const [loading,setLoading] = useState (false)
 
@@ -74,25 +75,29 @@ const Login = () => {
         
     }
 
-    const handleLogin = async(e) => {
-        e.preventDefault()
-        setLoading(true)
-
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+    
         const formData = new FormData(e.target);
-
-        const {email,password} = Object.fromEntries(formData);
-
-        try{
-           return await account.createEmailPasswordSession(email,password);
+        const { email, password } = Object.fromEntries(formData);
+    
+        try {
+            await account.createEmailPasswordSession(email, password);
+            const session = await account.getSession("current");
+            if (session) {
+                const userData = await account.get();
+                fetchUserInfo(userData.$id);
+            }
+            toast.success("Login successful!");
+        } catch (err) {
+            console.log(err);
+            toast.error(err.message);
+        } finally {
+            setLoading(false);
         }
-        catch(err){
-            console.log(err)
-            toast.error(err.message)
-        }
-        finally{
-            setLoading(false)
-        }
-    }
+    };
+    
 
     return (
       <div className='login'>
