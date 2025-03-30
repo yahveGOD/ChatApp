@@ -13,7 +13,7 @@ const App = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const session = await account.getSession("current"); // Явно получаем сессию
+        const session = await account.getSession("current"); 
         if (session) {
           const userData = await account.get();
           fetchUserInfo(userData.$id);
@@ -27,7 +27,7 @@ const App = () => {
     };
 
     checkAuth();
-  }, [fetchUserInfo]); // Добавляем зависимость
+  }, [fetchUserInfo]);
 
   if (isLoading) return <div className="loading">Loading...</div>;
 

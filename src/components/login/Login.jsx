@@ -89,7 +89,6 @@ const Login = () => {
                 const userData = await account.get();
                 fetchUserInfo(userData.$id);
             }
-            toast.success("Login successful!");
         } catch (err) {
             console.log(err);
             toast.error(err.message);
