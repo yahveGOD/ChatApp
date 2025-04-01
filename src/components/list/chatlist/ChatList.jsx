@@ -3,13 +3,15 @@ import "./chatList.css"
 import AddUser from "./addUser/AddUser"
 import { useUserStore } from "../../../lib/UserStore"
 import { client, databases } from "../../../lib/AppWriteConfig"
+import { useChatStore } from "../../../lib/ChatStore"
 
 const ChatList = () => {
   const [addMode, setAddMode] = useState(false)
   const [chats, setChats] = useState([])
   const { currentUser } = useUserStore()
+  const { chatId, changeChat} = useChatStore()
 
-  // Функция для загрузки чатов
+
   const fetchChats = async () => {
     try {
       const userChats = await databases.getDocument(
@@ -18,7 +20,6 @@ const ChatList = () => {
         currentUser.id
       )
 
-      // Если chats - это массив ID чатов
       const chatPromises = userChats.chats.map(async (chatId) => {
         const chatDoc = await databases.getDocument(
           "67e55994002fd6e76a8f",
@@ -26,7 +27,6 @@ const ChatList = () => {
           chatId
         )
         
-        // Находим ID собеседника
         const receiverId = chatDoc.participants.find(id => id !== currentUser.id)
         const userDoc = await databases.getDocument(
           "67e55994002fd6e76a8f",
@@ -50,12 +50,10 @@ const ChatList = () => {
     }
   }
 
-  // Первоначальная загрузка
   useEffect(() => {
     fetchChats()
   }, [currentUser.id])
 
-  // Подписка на обновления
   useEffect(() => {
     const unsubscribe = client.subscribe(
       `databases.67e55994002fd6e76a8f.collections.user_chats.documents.${currentUser.id}`,
@@ -64,6 +62,11 @@ const ChatList = () => {
 
     return () => unsubscribe()
   }, [currentUser.id])
+
+
+  const handleSelect = async (chat) => {
+    changeChat(chat.chatId,chat.user)
+  }
 
   return (
     <div className='chatList'>
@@ -77,13 +80,13 @@ const ChatList = () => {
           src={addMode ? "./minus.png" : "./add.png"} 
           alt=""
           onClick={() => {setAddMode(prev => !prev)
-            
+
           }}
         />
       </div>
 
       {chats.map(chat => (
-        <div className="item" key={chat.chatId}>
+        <div className="item" key={chat.chatId} onClick={()=> handleSelect(chat)}>
           <img src={chat.user?.avatar || "./avatar.png"} alt=""/>
           <div className="texts">
             <span>{chat.user?.username || "Unknown"}</span>

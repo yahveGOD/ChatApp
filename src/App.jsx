@@ -6,10 +6,11 @@ import List from "./components/list/List";
 import Chat from "./components/chat/Chat";
 import Login from "./components/login/login";
 import Notification from "./components/notification/Notification";
+import { useChatStore } from "./lib/ChatStore";
 
 const App = () => {
   const { currentUser, isLoading, fetchUserInfo } = useUserStore();
-
+  const{chatId} = useChatStore();
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -36,8 +37,8 @@ const App = () => {
       {currentUser ? (
         <>
           <List />
-          <Chat />
-          <Detail />
+          {chatId && <Chat />}
+          {chatId && <Detail />}
         </>
       ) : (
         <Login />

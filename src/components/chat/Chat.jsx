@@ -1,17 +1,57 @@
 import { useEffect, useState, useRef } from "react"
 import "./chat.css"
 import EmojiPicker from "emoji-picker-react"
+import { client, databases } from "../../lib/AppWriteConfig";
+import { useChatStore } from "../../lib/ChatStore";
 
 const Chat = () => {
 
   const[open,setOpen] = useState(false);
   const[text,setText] = useState("");
+  const[chat,setChat] = useState("");
+
+  const {chatId} = useChatStore();
 
   const endRef = useRef(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({behavior: "smooth"});
   },[]);
+
+  useEffect(() => {
+    let unsubscribe = () => {};
+  
+    const subscribeToChat = async () => {
+      const initialChat = await databases.getDocument(
+        '67e55994002fd6e76a8f',
+        '67e94a480016ebaba40f',
+        chatId
+      );
+      setChat(initialChat);
+  
+      unsubscribe = client.subscribe(
+        `databases.67e55994002fd6e76a8f.collections.67e94a480016ebaba40f.documents.${chatId}`,
+        async (response) => {
+          if (response.events.includes('databases.*.collections.*.documents.*.update')) {
+            const updatedChat = await databases.getDocument(
+              '67e55994002fd6e76a8f',
+              '67e94a480016ebaba40f',
+              chatId
+            );
+            setChat(updatedChat);
+          }
+        }
+      );
+    };
+  
+    subscribeToChat();
+  
+    return () => {
+      unsubscribe();
+    };
+  }, [chatId]);
+  
+  console.log(chat)
 
   const handleEmoji = (e) => {
     console.log(e);
