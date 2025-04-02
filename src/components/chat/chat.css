@@ -90,7 +90,7 @@
                 display: flex;
                 flex-direction: column;
                 gap: 5px;
-                
+                color: black;
                 img{
                     width: 100%;
                     height: 300px;
@@ -135,7 +135,7 @@
             background-color:  rgba(237, 197, 163, 0.877);
             border: none;
             outline: none;
-            color:white;
+            color:black;
             
             padding: 20px;
             border-radius: 10px;

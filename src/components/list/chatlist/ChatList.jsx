@@ -13,7 +13,6 @@ const ChatList = () => {
   const chatSubscriptions = useRef([]);
 
 
-  // Функция загрузки чатов
   const fetchChats = async () => {
     if (!currentUser?.$id) return;
 
@@ -73,7 +72,6 @@ const ChatList = () => {
     }
   };
 
-  // Подписка на изменения списка чатов пользователя
   useEffect(() => {
     if (!currentUser?.$id) return;
 
@@ -89,7 +87,6 @@ const ChatList = () => {
     };
   }, [currentUser?.$id]);
 
-  // Подписка на изменения сообщений в каждом чате
   useEffect(() => {
     if (!currentUser?.$id || chats.length === 0) return;
 

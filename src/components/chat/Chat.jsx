@@ -54,13 +54,7 @@ const Chat = () => {
   const handleSend = async () => {
     if (!text.trim()) return;
 
-    let imgUrl = null;
     try {
-      if (img.file) {
-        const fileId = ID.unique();
-        await storage.createFile("67ece95600242f50856f", fileId, img.file);
-        imgUrl = `https://cloud.appwrite.io/v1/storage/buckets/67ece95600242f50856f/files/${fileId}/view`;
-      }
 
       const newMessage = await databases.createDocument(
         "67e55994002fd6e76a8f", "67eceb90003babafbd02", ID.unique(),
@@ -69,7 +63,6 @@ const Chat = () => {
           chatId,
           text,
           createdAt: new Date().toISOString(),
-          ...(imgUrl && { img: imgUrl })
         }
       );
 
@@ -86,7 +79,6 @@ const Chat = () => {
          }
       );
       setMessages(prev => [...prev, newMessage]);
-      setImg({ file: null, url: "" });
       setText("");
     } catch (err) {
       console.error("Ошибка отправки сообщения:", err);
@@ -103,9 +95,9 @@ const Chat = () => {
     <div className='chat'>
       <div className="top">
         <div className="user">
-          <img src={user.avatar || "./avatar.png"} alt =""/>
+          <img src={user?.avatar || "./avatar.png"} alt =""/>
           <div className="texts">
-            <span>{user.username}</span>
+            <span>{user?.username}</span>
           </div>
         </div>
       </div>
@@ -115,8 +107,7 @@ const Chat = () => {
             <div className="texts">
               {message.img && <img src={message.img} alt="" />}
               <p>{message?.text}</p>
-{/*               <span>{new Date(message.createdAt).toLocaleTimeString()}</span>
- */}            </div>
+            </div>
           </div>
         ))}
         <div ref={endRef}></div>

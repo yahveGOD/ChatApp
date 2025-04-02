@@ -1,12 +1,44 @@
 import { toast } from "react-toastify";
-import { account } from "../../lib/AppWriteConfig"
+import { account, databases } from "../../lib/AppWriteConfig"
 import { useUserStore } from "../../lib/UserStore";
 import "./detail.css"
+import { useChatStore } from "../../lib/ChatStore";
 
 
 const Detail = () => {
 
-  const { logout } = useUserStore(); 
+  const { currentUser,logout } = useUserStore(); 
+
+  const {chatId,user,isCurrentUserBlocked,isReceiverBlocked,changeBlock} = useChatStore()
+
+
+  const handleBlock = async () => {
+    if (!currentUser || !user) return;
+  
+    try {
+      const userDoc = await databases.getDocument(
+        "67e55994002fd6e76a8f", 
+        "users", 
+        currentUser.$id 
+      );
+  
+      await databases.updateDocument(
+        "67e55994002fd6e76a8f",
+        "users", 
+        currentUser.$id, 
+        {
+          blocked: isReceiverBlocked 
+            ? userDoc.blocked.filter(id => id !== user.$id) 
+            : [...(userDoc.blocked || []), user.$id] 
+        }
+      );
+  
+      changeBlock();
+      
+    } catch (err) {
+      console.error("Error blocking user:", err);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -20,9 +52,8 @@ const Detail = () => {
     return (
       <div className='detail'>
         <div className="user">
-          <img src="./avatar.png" alt=""/>
-          <h2>UserName</h2>
-          <p>Lorem asdasdasdaf </p>
+          <img src={user?.avatar || "./avatar.png"} alt=""/>
+          <h2>{user?.username}</h2>
         </div>
         <div className="info">
           <div className="option">
@@ -39,41 +70,15 @@ const Detail = () => {
           </div>
           <div className="option">
             <div className="title">
-              <span>Shared Photos</span>
-              <img src="./arrowDown.png" alt=""/>
-            </div>
-            <div className="photos">
-              <div className="photoItem">
-                <div className="photoDetail">
-                  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoBuMvSuYezLE9rwI-zOJeIOmcIGfDPqOvFA&s" alt=""/>
-                  <span>photo_name.png</span>
-                </div>
-                <img src="./download.png" alt="" className="icon"/>
-              </div>
-              <div className="photoItem">
-                <div className="photoDetail">
-                  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoBuMvSuYezLE9rwI-zOJeIOmcIGfDPqOvFA&s" alt=""/>
-                  <span>photo_name.png</span>
-                </div>
-                <img src="./download.png" alt="" className="icon"/>
-              </div>
-              <div className="photoItem">
-                <div className="photoDetail">
-                  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoBuMvSuYezLE9rwI-zOJeIOmcIGfDPqOvFA&s" alt=""/>
-                  <span>photo_name.png</span>
-                </div>
-                <img src="./download.png" alt="" className="icon"/>
-              </div>
-            </div>
-          </div>
-          <div className="option">
-            <div className="title">
               <span>Shared Files</span>
               <img src="./arrowUp.png" alt=""/>
             </div>
           </div>
         </div>
-        <button>Block User</button>
+        <button onClick={handleBlock}> {
+          isCurrentUserBlocked ? "You are blocked" : isReceiverBlocked ? "User blocked" : "Block User"
+          
+          }</button>
         <button className="logout" onClick={() => handleLogout()}>Logout</button>
         </div>
     )

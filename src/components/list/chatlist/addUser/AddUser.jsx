@@ -12,7 +12,6 @@ const AddUser = ({ onChatAdded }) => {
     if (!user) return;
 
     try {
-      // 1. Создаём новый чат
       const newChat = await databases.createDocument(
         "67e55994002fd6e76a8f",
         "67e94a480016ebaba40f",
@@ -20,12 +19,11 @@ const AddUser = ({ onChatAdded }) => {
         {
           createdAt: new Date().toISOString(),
           message: [],
-          participants: [user.$id, currentUser.$id], // Исправлено с user.id на user.$id
+          participants: [user.$id, currentUser.$id],
           updatedAt: new Date().toISOString(),
         }
       );
 
-      // 2. Функция для обновления/создания чатов пользователя
       const updateUserChats = async (userId) => {
         try {
           let userData;
@@ -36,7 +34,6 @@ const AddUser = ({ onChatAdded }) => {
               userId
             );
           } catch (error) {
-            // Если документа нет, создаём его
             await databases.createDocument(
               "67e55994002fd6e76a8f",
               "user_chats",
@@ -46,7 +43,6 @@ const AddUser = ({ onChatAdded }) => {
             return;
           }
 
-          // Обновляем чаты
           await databases.updateDocument(
             "67e55994002fd6e76a8f",
             "user_chats",
@@ -60,18 +56,15 @@ const AddUser = ({ onChatAdded }) => {
         }
       };
 
-      // 3. Обновляем чаты обоих пользователей
       await Promise.all([
         updateUserChats(user.$id),
         updateUserChats(currentUser.$id),
       ]);
 
-      // 4. Вызываем колбэк для обновления списка чатов
       if (onChatAdded) {
         onChatAdded();
       }
 
-      // 5. Сбрасываем состояние
       setUser(null);
     } catch (err) {
       console.error("Ошибка при создании чата:", err);
