@@ -17,38 +17,69 @@ const ChatList = () => {
       const userChats = await databases.getDocument(
         "67e55994002fd6e76a8f",
         "user_chats",
-        currentUser.id
-      )
-
+        currentUser.$id
+      );
+  
+      if (!userChats?.chats?.length) {
+        setChats([]);
+        return;
+      }
+  
       const chatPromises = userChats.chats.map(async (chatId) => {
-        const chatDoc = await databases.getDocument(
-          "67e55994002fd6e76a8f",
-          "67e94a480016ebaba40f",
-          chatId
-        )
-        
-        const receiverId = chatDoc.participants.find(id => id !== currentUser.id)
-        const userDoc = await databases.getDocument(
-          "67e55994002fd6e76a8f",
-          "users",
-          receiverId
-        )
-        
-        return {
-          chatId,
-          receiverId,
-          user: userDoc,
-          lastMessage: chatDoc.messages?.slice(-1)[0]?.text || "",
-          updatedAt: chatDoc.updatedAt || chatDoc.createdAt
+        try {
+          const chatDoc = await databases.getDocument(
+            "67e55994002fd6e76a8f",
+            "67e94a480016ebaba40f",
+            chatId
+          );
+          
+          if (!chatDoc || !chatDoc.participants.includes(currentUser.$id)) {
+            return null;
+          }
+          
+          const receiverId = chatDoc.participants.find(id => id !== currentUser.$id);
+          const userDoc = await databases.getDocument(
+            "67e55994002fd6e76a8f",
+            "users",
+            receiverId
+          );
+          
+          return {
+            chatId,
+            receiverId,
+            user: userDoc,
+            lastMessage: chatDoc.lastMessage || "No messages yet",
+            updatedAt: chatDoc.updatedAt || chatDoc.createdAt
+          };
+        } catch (error) {
+          console.error(`Error loading chat ${chatId}:`, error);
+          return null;
         }
-      })
-
-      const loadedChats = await Promise.all(chatPromises)
-      setChats(loadedChats.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
+      });
+  
+      const loadedChats = (await Promise.all(chatPromises)).filter(chat => chat !== null);
+      setChats(loadedChats.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)));
     } catch (err) {
-      console.error("Ошибка загрузки чатов:", err)
+      if (err.code === 404) {
+        console.log("User chats document not found, creating new one");
+        try {
+          await databases.createDocument(
+            "67e55994002fd6e76a8f",
+            "user_chats",
+            currentUser.$id,
+            { chats: [] }
+          );
+          setChats([]);
+        } catch (createErr) {
+          console.error("Error creating user_chats:", createErr);
+          setChats([]);
+        }
+      } else {
+        console.error("Ошибка загрузки чатов:", err);
+        setChats([]);
+      }
     }
-  }
+  };
 
   useEffect(() => {
     fetchChats()

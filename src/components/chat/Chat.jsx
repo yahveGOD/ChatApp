@@ -1,146 +1,158 @@
-import { useEffect, useState, useRef } from "react"
-import "./chat.css"
-import EmojiPicker from "emoji-picker-react"
-import { client, databases } from "../../lib/AppWriteConfig";
+import { useEffect, useRef, useState } from "react";
+import "./chat.css";
+import EmojiPicker from "emoji-picker-react";
+import { client, databases, storage } from "../../lib/AppWriteConfig";
 import { useChatStore } from "../../lib/ChatStore";
+import { useUserStore } from "../../lib/UserStore";
+import { ID, Query } from "appwrite";
 
 const Chat = () => {
+  const [chat, setChat] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [img, setImg] = useState({ file: null, url: "" });
+  const [messages, setMessages] = useState([]);
 
-  const[open,setOpen] = useState(false);
-  const[text,setText] = useState("");
-  const[chat,setChat] = useState("");
-
-  const {chatId} = useChatStore();
-
+  const { currentUser } = useUserStore();
+  const { chatId, user, isCurrentUserBlocked, isReceiverBlocked } = useChatStore();
   const endRef = useRef(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({behavior: "smooth"});
-  },[]);
+    if (!chatId) return;
+
+    const loadChat = async () => {
+      const chatData = await databases.getDocument("67e55994002fd6e76a8f", "67e94a480016ebaba40f", chatId);
+      setChat(chatData);
+      
+      if (chatData.message) {
+        const messageData = await databases.getDocument("67e55994002fd6e76a8f", "67eceb90003babafbd02", chatData.message);
+        setMessages([messageData]);
+      }
+    };
+
+    loadChat();
+  }, [chatId]);
 
   useEffect(() => {
-    let unsubscribe = () => {};
-  
-    const subscribeToChat = async () => {
-      const initialChat = await databases.getDocument(
-        '67e55994002fd6e76a8f',
-        '67e94a480016ebaba40f',
-        chatId
+    if (!chatId) return;
+
+    const loadMessages = async () => {
+      const response = await databases.listDocuments(
+        "67e55994002fd6e76a8f", "67eceb90003babafbd02",
+        [Query.equal("chatId", chatId), Query.orderAsc("createdAt")]
       );
-      setChat(initialChat);
-  
-      unsubscribe = client.subscribe(
-        `databases.67e55994002fd6e76a8f.collections.67e94a480016ebaba40f.documents.${chatId}`,
-        async (response) => {
-          if (response.events.includes('databases.*.collections.*.documents.*.update')) {
-            const updatedChat = await databases.getDocument(
-              '67e55994002fd6e76a8f',
-              '67e94a480016ebaba40f',
-              chatId
-            );
-            setChat(updatedChat);
-          }
+      setMessages(response.documents);
+    };
+
+    loadMessages();
+  }, [chatId]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "instant" });
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!text.trim()) return;
+
+    let imgUrl = null;
+    try {
+      if (img.file) {
+        const fileId = ID.unique();
+        await storage.createFile("67ece95600242f50856f", fileId, img.file);
+        imgUrl = `https://cloud.appwrite.io/v1/storage/buckets/67ece95600242f50856f/files/${fileId}/view`;
+      }
+
+      const newMessage = await databases.createDocument(
+        "67e55994002fd6e76a8f", "67eceb90003babafbd02", ID.unique(),
+        {
+          senderId: currentUser.$id,
+          chatId,
+          text,
+          createdAt: new Date().toISOString(),
+          ...(imgUrl && { img: imgUrl })
         }
       );
-    };
-  
-    subscribeToChat();
-  
-    return () => {
-      unsubscribe();
-    };
-  }, [chatId]);
-  
-  console.log(chat)
+
+      const chatDoc = await databases.getDocument(
+        "67e55994002fd6e76a8f", "67e94a480016ebaba40f", chatId
+      );
+      
+      const updatedMessages = chatDoc.message ? [...chatDoc.message, newMessage.$id] : [newMessage.$id];
+      
+      await databases.updateDocument(
+        "67e55994002fd6e76a8f", "67e94a480016ebaba40f", chatId,
+        { message: updatedMessages,
+          lastMessage: text
+         }
+      );
+      setMessages(prev => [...prev, newMessage]);
+      setImg({ file: null, url: "" });
+      setText("");
+    } catch (err) {
+      console.error("Ошибка отправки сообщения:", err);
+    }
+  };
+
 
   const handleEmoji = (e) => {
-    console.log(e);
     setText((prev) => prev + e.emoji);
-  }; 
+    setOpen(false);
+  };
 
-
-    return (
-      
-      <div className='chat'>
-        <div className="top">
-          <div className="user">
-            <img src="./avatar.png" alt =""/>
-            <div className="texts">
-              <span>User</span>
-              <p>Lorem ipsum dolor sit amet</p>
-            </div>
+  return (
+    <div className='chat'>
+      <div className="top">
+        <div className="user">
+          <img src={user.avatar || "./avatar.png"} alt =""/>
+          <div className="texts">
+            <span>{user.username}</span>
           </div>
-          <div className="icons">
-            <img src="./phone1.png" alt=""/>
-            <img src="./video1.png" alt=""/>
-            <img src="./info.png" alt=""/>
-          </div>
-
-        </div>
-        <div className="center">
-          <div className="message">
-            <img src="./avatar.png" alt=""/>
-            <div className="texts">
-              <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Commodi tempore vitae voluptatem et praesentium illum aut, quas nostrum, minima tenetur reprehenderit temporibus? Sint quibusdam repellendus commodi, voluptatum ullam ipsum consectetur?</p>
-              <span>1 min ago</span>
-            </div>
-          </div>
-          <div className="message">
-            <img src="./avatar.png" alt=""/>
-            <div className="texts">
-              <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Commodi tempore vitae voluptatem et praesentium illum aut, quas nostrum, minima tenetur reprehenderit temporibus? Sint quibusdam repellendus commodi, voluptatum ullam ipsum consectetur?</p>
-              <span>1 min ago</span>
-            </div>
-          </div>
-          <div className="message own">
-            <div className="texts">
-              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoBuMvSuYezLE9rwI-zOJeIOmcIGfDPqOvFA&s" alt=""/>
-              <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Commodi tempore vitae voluptatem et praesentium illum aut, quas nostrum, minima tenetur reprehenderit temporibus? Sint quibusdam repellendus commodi, voluptatum ullam ipsum consectetur?</p>
-              <span>1 min ago</span>
-            </div>
-          </div>
-          <div className="message">
-            <img src="./avatar.png" alt=""/>
-            <div className="texts">
-              <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Commodi tempore vitae voluptatem et praesentium illum aut, quas nostrum, minima tenetur reprehenderit temporibus? Sint quibusdam repellendus commodi, voluptatum ullam ipsum consectetur?</p>
-              <span>1 min ago</span>
-            </div>
-          </div>
-          <div className="message">
-            <img src="./avatar.png" alt=""/>
-            <div className="texts">
-              <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Commodi tempore vitae voluptatem et praesentium illum aut, quas nostrum, minima tenetur reprehenderit temporibus? Sint quibusdam repellendus commodi, voluptatum ullam ipsum consectetur?</p>
-              <span>1 min ago</span>
-            </div>
-          </div>
-          <div className="message own">
-            <div className="texts">
-              <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Commodi tempore vitae voluptatem et praesentium illum aut, quas nostrum, minima tenetur reprehenderit temporibus? Sint quibusdam repellendus commodi, voluptatum ullam ipsum consectetur?</p>
-              <span>1 min ago</span>
-            </div>
-          </div>
-          <div ref = {endRef}></div>
-        </div>
-        <div className="bottom">
-          <div className="icons">
-            <img src="./img.png" alt=""/>
-            <img src="./camera.png" alt=""/>
-            <img src="./mic.png" alt=""/>
-          </div>
-          <input type="text"
-          placeholder="Type a Message"
-          value={text}
-          onChange={(e)=>setText(e.target.value)}/>
-          <div className="emoji">
-            <img src = "./emoji1.png" alt="" onClick={()=>setOpen(prev => !prev)}/>
-            <div className="picker">
-             <EmojiPicker open = {open} onEmojiClick={handleEmoji}/>
-            </div>
-          </div>
-          <button className="sendButton">Send</button>
         </div>
       </div>
-    )
-  }
-  
-  export default Chat
+      <div className="center">
+        {messages.map((message) => (
+          <div className={`message ${message.senderId === currentUser.$id ? "own" : ""}`} key={message.$id}>
+            <div className="texts">
+              {message.img && <img src={message.img} alt="" />}
+              <p>{message?.text}</p>
+{/*               <span>{new Date(message.createdAt).toLocaleTimeString()}</span>
+ */}            </div>
+          </div>
+        ))}
+        <div ref={endRef}></div>
+      </div>
+      <div className="bottom">
+      <input
+          type="text"
+          placeholder={
+            isCurrentUserBlocked || isReceiverBlocked
+              ? "You cannot send a message"
+              : "Type a message..."
+          }
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          disabled={isCurrentUserBlocked || isReceiverBlocked}
+        />
+        <div className="emoji">
+          <img
+            src="./emoji.png"
+            alt=""
+            onClick={() => setOpen((prev) => !prev)}
+          />
+          <div className="picker">
+            <EmojiPicker open={open} onEmojiClick={handleEmoji} />
+          </div>
+        </div>
+        <button
+          className="sendButton"
+          onClick={handleSend}
+          disabled={isCurrentUserBlocked || isReceiverBlocked}
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Chat;

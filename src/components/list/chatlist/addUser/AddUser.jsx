@@ -4,12 +4,12 @@ import "./addUser.css"
 import { ID, Query } from "appwrite"
 import { useUserStore } from "../../../../lib/UserStore"
 
-const AddUser = ({ onChatAdded }) => { // Добавляем пропс в параметры компонента
+const AddUser = ({ onChatAdded }) => {
   const [user, setUser] = useState(null)
   const { currentUser } = useUserStore()
 
   const handleAdd = async () => {
-    if (!user) return // Защита от пустого пользователя
+    if (!user) return
 
     try {
       // 1. Создаем новый чат
@@ -19,21 +19,22 @@ const AddUser = ({ onChatAdded }) => { // Добавляем пропс в па�
         ID.unique(),
         {
           createdAt: new Date().toISOString(),
-          messages: [],
+          message: [],
           participants: [user.id, currentUser.id],
-          updatedAt: new Date().toISOString() // Добавляем updatedAt
+          updatedAt: new Date().toISOString()
         }
       )
-
-      // 2. Функция для обновления чатов пользователя
+      // 2. Функция для создания/обновления чатов пользователя
       const updateUserChats = async (userId) => {
         try {
+          // Пытаемся получить документ
           const userData = await databases.getDocument(
             "67e55994002fd6e76a8f",
             'user_chats',
             userId
           )
           
+          // Если документ существует - обновляем
           await databases.updateDocument(
             "67e55994002fd6e76a8f",
             'user_chats',
@@ -43,7 +44,20 @@ const AddUser = ({ onChatAdded }) => { // Добавляем пропс в па�
             }
           )
         } catch (error) {
-          console.error(`Error updating chats for user ${userId}:`, error)
+          // Если документ не найден - создаем новый
+          if (error.code === 404) {
+            await databases.createDocument(
+              "67e55994002fd6e76a8f",
+              'user_chats',
+              userId, // Используем userId как ID документа
+              {
+                chats: [newChat.$id],
+                userId: userId // Дополнительное поле для удобства
+              }
+            )
+          } else {
+            console.error(`Error updating chats for user ${userId}:`, error)
+          }
         }
       }
 
@@ -66,6 +80,7 @@ const AddUser = ({ onChatAdded }) => { // Добавляем пропс в па�
     }
   }
 
+  // Остальной код остается без изменений
   const handleSearch = async e => {
     e.preventDefault()
     const formData = new FormData(e.target)
@@ -82,7 +97,7 @@ const AddUser = ({ onChatAdded }) => { // Добавляем пропс в па�
         setUser(response.documents[0])
       } else {
         console.log("Пользователь не найден")
-        setUser(null) // Сбрасываем пользователя если не найден
+        setUser(null)
       }
     } catch (err) {
       console.error("Ошибка при запросе:", err)
