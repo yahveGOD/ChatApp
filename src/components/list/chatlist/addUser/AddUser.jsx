@@ -12,7 +12,6 @@ const AddUser = ({ onChatAdded }) => {
     if (!user) return
 
     try {
-      // 1. Создаем новый чат
       const newChat = await databases.createDocument(
         "67e55994002fd6e76a8f",  
         '67e94a480016ebaba40f',
@@ -24,17 +23,14 @@ const AddUser = ({ onChatAdded }) => {
           updatedAt: new Date().toISOString()
         }
       )
-      // 2. Функция для создания/обновления чатов пользователя
       const updateUserChats = async (userId) => {
         try {
-          // Пытаемся получить документ
           const userData = await databases.getDocument(
             "67e55994002fd6e76a8f",
             'user_chats',
             userId
           )
           
-          // Если документ существует - обновляем
           await databases.updateDocument(
             "67e55994002fd6e76a8f",
             'user_chats',
@@ -44,35 +40,29 @@ const AddUser = ({ onChatAdded }) => {
             }
           )
         } catch (error) {
-          // Если документ не найден - создаем новый
           if (error.code === 404) {
             await databases.createDocument(
               "67e55994002fd6e76a8f",
               'user_chats',
-              userId, // Используем userId как ID документа
+              userId, 
               {
                 chats: [newChat.$id],
-                userId: userId // Дополнительное поле для удобства
               }
             )
           } else {
-            console.error(`Error updating chats for user ${userId}:`, error)
           }
         }
       }
 
-      // 3. Обновляем чаты обоих пользователей
       await Promise.all([
         updateUserChats(user.id),
         updateUserChats(currentUser.id)
       ])
 
-      // 4. Вызываем колбэк для обновления списка чатов
       if (onChatAdded) {
         onChatAdded()
       }
 
-      // 5. Сбрасываем состояние
       setUser(null)
 
     } catch (err) {
@@ -80,7 +70,6 @@ const AddUser = ({ onChatAdded }) => {
     }
   }
 
-  // Остальной код остается без изменений
   const handleSearch = async e => {
     e.preventDefault()
     const formData = new FormData(e.target)
